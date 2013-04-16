@@ -1,0 +1,32 @@
+name: LolnetWarpSign
+main: com.james137137.LolnetWarpSign.LolnetWarpSign
+softdepend: [Essentials,Vault,Multiverse-Core]
+version: 0.01
+authors: [James Anderson]
+commands:
+  LolnetWarpSign:
+    description: LolnetWarpSign
+permissions:
+  LolnetWarpSign.*:
+    description: Gives access to all LolnetWarpSign commands
+    children:
+      LolnetWarpSign.SetPrice: true
+      LolnetWarpSign.SetWarp.bypass: true
+      LolnetWarpSign.WarpSign.bypass: true
+      LolnetWarpSign.BreakWarp.bypass: true
+      LolnetWarpSign.activate: true
+  LolnetWarpSign.SetPrice:
+    description: Allows player to Set prices
+    default: op
+  LolnetWarpSign.SetWarp.bypass:
+    description: Allows player to bypass paying for /setwarp
+    default: op
+  LolnetWarpSign.WarpSign.bypass:
+    description: Allows player to bypass paying for warp Sign
+    default: op
+  LolnetWarpSign.BreakWarp.bypass:
+    description: Allows player to break any [mywarp] sign
+    default: op
+  LolnetWarpSign.activate:
+    description: Allows player to activate any [mywarp] sign
+    default: op
