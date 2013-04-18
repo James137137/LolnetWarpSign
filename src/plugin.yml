@@ -1,7 +1,7 @@
 name: LolnetWarpSign
 main: com.james137137.LolnetWarpSign.LolnetWarpSign
 softdepend: [Essentials,Vault,Multiverse-Core]
-version: 0.01
+version: 0.02
 authors: [James Anderson]
 commands:
   LolnetWarpSign:

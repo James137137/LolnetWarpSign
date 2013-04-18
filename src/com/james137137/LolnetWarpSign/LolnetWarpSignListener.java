@@ -52,7 +52,12 @@ class LolnetWarpSignListener implements Listener {
         int mat = block.getTypeId();
         if ((mat == Material.SIGN_POST.getId()) || (mat == Material.WALL_SIGN.getId())) {
             Sign lolnetSign = (Sign) block.getState();
-            if (!lolnetSign.getLine(3).equalsIgnoreCase(ChatColor.GREEN +player.getName()) && lolnetSign.getLine(3).substring(0, 2).equals(""+ChatColor.GREEN))
+            String Line3 = lolnetSign.getLine(3);
+            if (Line3.length()<=2)
+            {
+                return;
+            }
+            if (!Line3.equalsIgnoreCase(ChatColor.GREEN +player.getName()) && Line3.substring(0, 2).equals(""+ChatColor.GREEN))
             {
                 event.setCancelled(true);
             }
