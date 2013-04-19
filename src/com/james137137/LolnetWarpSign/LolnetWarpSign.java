@@ -5,6 +5,7 @@
 package com.james137137.LolnetWarpSign;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -106,6 +107,13 @@ public class LolnetWarpSign extends JavaPlugin implements Listener {
                     
                 }
             }
+            if (args[0].equalsIgnoreCase("Cleanup"))
+            {
+                CleanupInvaildWarps();
+                sender.sendMessage("cleanup complete");
+            }
+            
+            
             return true;
             } else
             {
@@ -142,11 +150,17 @@ public class LolnetWarpSign extends JavaPlugin implements Listener {
                 tempxyz = in.readLine().substring(7);
                 pitch = Float.parseFloat(tempxyz);
                 System.out.println(tempxyz);
+                in.close();
                 
                 
                 
             } catch (IOException ex) {
                 player.sendMessage(ChatColor.DARK_RED+ "Something is wrong with the warp File");
+                try {
+                    in.close();
+                } catch (IOException ex1) {
+                    Logger.getLogger(LolnetWarpSign.class.getName()).log(Level.SEVERE, null, ex1);
+                }
                 return;
             }
         } catch (FileNotFoundException ex ) {
@@ -185,5 +199,43 @@ public class LolnetWarpSign extends JavaPlugin implements Listener {
         player.sendMessage(ChatColor.YELLOW+"Teleporting to: " + warpName);
         Location loc = new Location(teleWorld, x, y, z, yaw, pitch);
         player.teleport(loc, PlayerTeleportEvent.TeleportCause.PLUGIN);
+    }
+    
+    public void CleanupInvaildWarps() {
+        List<World> worlds = getServer().getWorlds();
+        BufferedReader in;
+        String world;
+        boolean worldExist;
+        File[] fileList = new File("plugins/Essentials/warps").listFiles();
+        for (int i = 0; i < fileList.length; i++) {
+            worldExist = false;
+            try {
+                in = new BufferedReader(new FileReader(fileList[i].getAbsolutePath()));
+                try {
+                    world = in.readLine().substring(7);
+                    in.close();
+                    
+
+                    for (int j = 0; j < worlds.size(); j++) {
+                        if (worlds.get(j).getName().equalsIgnoreCase(world)) {
+                            worldExist = true;
+                            break;
+                        }
+                    }
+                    
+                    if (!worldExist) {
+                        fileList[i].delete();
+                        
+                    }
+
+
+                } catch (IOException ex) {
+                    Logger.getLogger(LolnetWarpSign.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+            } catch (FileNotFoundException ex) {
+                Logger.getLogger(LolnetWarpSign.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
 }
