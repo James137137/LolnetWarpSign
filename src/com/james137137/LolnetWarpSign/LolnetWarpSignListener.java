@@ -9,6 +9,8 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import me.ryanhamshire.GriefPrevention.Claim;
+import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.milkbowl.vault.economy.Economy;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
@@ -30,13 +32,19 @@ import org.bukkit.event.block.BlockBreakEvent;
 class LolnetWarpSignListener implements Listener {
 
     private LolnetWarpSign LolnetWarpSign;
+    static final Logger log = Logger.getLogger("Minecraft");
     Economy economy;
-    FileConfiguration config; 
+    FileConfiguration config;
+    private boolean griefPreventionEnable = false;
 
     public LolnetWarpSignListener(LolnetWarpSign aThis, Economy economy) {
         this.LolnetWarpSign = aThis;
         this.economy = economy;
         config = aThis.getConfig();
+        if (aThis.getServer().getPluginManager().getPlugin("GriefPrevention") != null)
+        {
+            griefPreventionEnable = true;
+        }
     }
 
     @EventHandler
@@ -74,7 +82,7 @@ class LolnetWarpSignListener implements Listener {
         
         String Command = "";
         String warpName = "[none]";
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < message.length(); i++) {
             if (message.charAt(i) == ' ') {
                 warpName = message.substring(i + 1, message.length());
                 break;
@@ -83,6 +91,28 @@ class LolnetWarpSignListener implements Listener {
         }
         
         if (Command.equalsIgnoreCase("setwarp")) {
+            if (warpName.contains(" "))
+            {
+                player.sendMessage(ChatColor.RED + "Invaild warp name. Please make sure it doesn't contain spaces");
+                event.setCancelled(true);
+                return;
+            }
+            if (griefPreventionEnable) {
+                Claim claim = GriefPrevention.instance.dataStore.getClaimAt(player.getLocation(), true, null);
+                if (claim == null) {
+                    player.sendMessage(ChatColor.RED +"You must be in a claim to /setwarp");
+                    event.setCancelled(true);
+                    return;
+                } else if (claim.allowBuild(player) != null) {
+                    player.sendMessage(ChatColor.RED +"You must have permission to build in this claim to /setwarp");
+                    event.setCancelled(true);
+                    return;
+                }
+            }
+            
+            
+            
+            
             if (economy.getBalance(player.getName()) >= config.getInt("NewWarpCost")) {
                 try {
                     BufferedReader in = new BufferedReader(new FileReader("plugins/Essentials/warps/" + warpName + ".yml"));
@@ -95,11 +125,16 @@ class LolnetWarpSignListener implements Listener {
                         event.setCancelled(true);
                         return;
                     }
+                    log.log(Level.INFO, "{0} has set a new warp called: {1} at location: {2},{3},{4}",
+                            new Object[]{player.getName(), warpName, player.getLocation().getBlockX(),
+                                player.getLocation().getBlockY(), player.getLocation().getBlockZ()});
                     economy.withdrawPlayer(player.getName(), config.getInt("NewWarpCost"));
                     player.sendMessage(ChatColor.GREEN + "$" + config.getInt("NewWarpCost") + " has been taken off you.");
                 }
             } else {
                     player.sendMessage(ChatColor.RED + "you need $" +config.getInt("NewWarpCost"));
+                    event.setCancelled(true);
+                    return;
                 }
         }
 
@@ -117,20 +152,56 @@ class LolnetWarpSignListener implements Listener {
         int mat = block.getTypeId();
         if ((mat == Material.SIGN_POST.getId()) || (mat == Material.WALL_SIGN.getId())) {
             Sign lolnetSign = (Sign) block.getState();
-            if (lolnetSign.getLine(0).equalsIgnoreCase(ChatColor.DARK_BLUE + "[MyWarp]") && player.hasPermission("essentials.signs.use.warp")) {
-                LolnetWarpSign.TeleportPlayer(player, lolnetSign.getLine(1).toLowerCase(), mat);
+            if ((lolnetSign.getLine(0).equalsIgnoreCase(ChatColor.DARK_BLUE + "[MyWarp]") || lolnetSign.getLine(0).equalsIgnoreCase(ChatColor.DARK_BLUE + "[PrivateWarp]")) && player.hasPermission("essentials.signs.use.warp")) {
+                if (lolnetSign.getLine(0).equalsIgnoreCase(ChatColor.DARK_BLUE + "[MyWarp]"))
+                {
+                   LolnetWarpSign.TeleportPlayer(player, lolnetSign.getLine(1).toLowerCase(), mat); 
+                } else
+                {
+                    String Line3 = lolnetSign.getLine(3);
+                    if (Line3.equalsIgnoreCase(ChatColor.GREEN +player.getName()) || player.hasPermission("LolnetWarpSign.WarpSign.bypass"))
+                    {
+                        LolnetWarpSign.TeleportPlayer(player, lolnetSign.getLine(1).toLowerCase(), mat); 
+                    }
+                    else
+                    {
+                        player.sendMessage(ChatColor.RED + "This is not your Warp Sign");
+                    }
+                }
+                
                 return;
             }
 
 
-            if ((lolnetSign.getLine(0).equalsIgnoreCase("[myWarp]") || lolnetSign.getLine(0).equalsIgnoreCase("[Warp]")) 
+            if ((lolnetSign.getLine(0).equalsIgnoreCase("[myWarp]") || lolnetSign.getLine(0).equalsIgnoreCase("[Warp]") 
+                    || lolnetSign.getLine(0).equalsIgnoreCase("[PrivateWarp]")) 
                     && player.hasPermission("LolnetWarpSign.activate")) {
+                
+                if (griefPreventionEnable && !player.hasPermission("LolnetWarpSign.WarpSign.bypass")) {
+                Claim claim = GriefPrevention.instance.dataStore.getClaimAt(lolnetSign.getLocation(), true, null);
+                if (claim == null) {
+                    player.sendMessage(ChatColor.RED +"that sign must be in a claim to activate that sign");
+                    event.setCancelled(true);
+                    return;
+                } else if (claim.allowBuild(player) != null) {
+                    player.sendMessage(ChatColor.RED +"You must have permission to build in this claim to activate that sign");
+                    event.setCancelled(true);
+                    return;
+                }
+            }
                 
                 
                 if (economy.getBalance(player.getName()) >= config.getInt("WarpSignCost")) {
                     try {
                         BufferedReader in = new BufferedReader(new FileReader("plugins/Essentials/warps/" + lolnetSign.getLine(1).toLowerCase() + ".yml"));
-                        lolnetSign.setLine(0, ChatColor.DARK_BLUE + "[MyWarp]");
+                        
+                        if (lolnetSign.getLine(0).equalsIgnoreCase("[PrivateWarp]"))
+                        {
+                            lolnetSign.setLine(0, ChatColor.DARK_BLUE + "[PrivateWarp]");
+                        } else
+                        {
+                            lolnetSign.setLine(0, ChatColor.DARK_BLUE + "[MyWarp]");
+                        }
                         lolnetSign.setLine(3, ChatColor.GREEN + player.getName());
                         lolnetSign.update();
                         if (!player.hasPermission("LolnetWarpSign.WarpSign.bypass")) {
