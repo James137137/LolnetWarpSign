@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import me.ryanhamshire.GriefPrevention.Claim;
 import me.ryanhamshire.GriefPrevention.GriefPrevention;
 import net.milkbowl.vault.economy.Economy;
@@ -94,13 +95,14 @@ class LolnetWarpSignListener implements Listener {
 
             if (Command.equalsIgnoreCase("setwarp")) {
                 
+                
                 if (warpName.length() < 3) {
                     player.sendMessage(ChatColor.RED + "Invaild warp name. it must have a minium of 3 charaters");
                     event.setCancelled(true);
                     return;
                 }
-                if (warpName.contains(" ")) {
-                    player.sendMessage(ChatColor.RED + "Invaild warp name. Please make sure it doesn't contain spaces");
+                if (invalidWarpName(warpName)) {
+                    player.sendMessage(ChatColor.RED + "Invaild warp name.");
                     event.setCancelled(true);
                     return;
                 }
@@ -228,4 +230,17 @@ class LolnetWarpSignListener implements Listener {
 
         }
     }
+    
+    private boolean invalidWarpName(String warpName)
+            {
+                boolean success = false;
+                Pattern p = Pattern.compile("[^a-zA-Z0-9]");
+                Pattern u = Pattern.compile("_");
+                if ((p.matcher(warpName).find()) && (!u.matcher(warpName).find()))
+                {
+                    return true;
+                }
+                
+                return false;
+            }
 }
