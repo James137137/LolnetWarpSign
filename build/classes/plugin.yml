@@ -1,11 +1,14 @@
 name: LolnetWarpSign
 main: com.james137137.LolnetWarpSign.LolnetWarpSign
 softdepend: [Essentials,Vault,Multiverse-Core]
-version: 1.01
+version: 1.02
 authors: [James Anderson]
 commands:
   LolnetWarpSign:
     description: LolnetWarpSign
+  PayServer:
+    description: pay server
+    usage: /<command> [Ammount] [reference]
 permissions:
   LolnetWarpSign.*:
     description: Gives access to all LolnetWarpSign commands

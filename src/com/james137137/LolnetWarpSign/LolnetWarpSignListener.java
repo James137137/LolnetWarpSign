@@ -5,6 +5,7 @@
 package com.james137137.LolnetWarpSign;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.util.logging.Level;
@@ -33,6 +34,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 class LolnetWarpSignListener implements Listener {
 
     private LolnetWarpSign LolnetWarpSign;
+    private static File[] fileList;
     static final Logger log = Logger.getLogger("Minecraft");
     Economy economy;
     FileConfiguration config;
@@ -76,12 +78,7 @@ class LolnetWarpSignListener implements Listener {
             }
 
             String message = event.getMessage();
-            if (message.contains("createwarp"))
-            {
-                 player.sendMessage(ChatColor.RED + "please use /setwarp");
-                 event.setCancelled(true);
-                 return;
-            }
+
 
             String Command = "";
             String warpName = "";
@@ -93,9 +90,9 @@ class LolnetWarpSignListener implements Listener {
                 Command += message.charAt(i);
             }
 
-            if (Command.equalsIgnoreCase("setwarp")) {
-                
-                
+            if (Command.equalsIgnoreCase("setwarp") || Command.equalsIgnoreCase("createwarp")) {
+
+
                 if (warpName.length() < 3) {
                     player.sendMessage(ChatColor.RED + "Invaild warp name. it must have a minium of 3 charaters");
                     event.setCancelled(true);
@@ -123,29 +120,34 @@ class LolnetWarpSignListener implements Listener {
 
 
                 if (economy.getBalance(player.getName()) >= config.getInt("NewWarpCost")) {
-                    try {
-                        BufferedReader in = new BufferedReader(new FileReader("plugins/Essentials/warps/" + warpName + ".yml"));
-                        player.sendMessage(ChatColor.DARK_RED + "Warp already exist");
-                        event.setCancelled(true);
-                        return;
-                    } catch (FileNotFoundException ex) {
-                        if (warpName.length() > 15) {
-                            player.sendMessage(ChatColor.RED + "Warp Name is too long please use a shorter name");
+
+                    fileList = new File("plugins/Essentials/warps").listFiles();
+                    for (int i = 0; i < fileList.length; i++) {
+                        if (fileList[i].getName().equalsIgnoreCase(warpName + ".yml")) {
+                            player.sendMessage(ChatColor.DARK_RED + "Warp already exist");
                             event.setCancelled(true);
                             return;
                         }
-                        log.log(Level.INFO, "{0} has set a new warp called: {1} at location: {2},{3},{4}",
-                                new Object[]{player.getName(), warpName, player.getLocation().getBlockX(),
-                            player.getLocation().getBlockY(), player.getLocation().getBlockZ()});
-                        economy.withdrawPlayer(player.getName(), config.getInt("NewWarpCost"));
-                        player.sendMessage(ChatColor.GREEN + "$" + config.getInt("NewWarpCost") + " has been taken off you.");
                     }
-                } else {
-                    player.sendMessage(ChatColor.RED + "you need $" + config.getInt("NewWarpCost"));
-                    event.setCancelled(true);
-                    return;
+                    
+
+                    if (warpName.length() > 15) {
+                        player.sendMessage(ChatColor.RED + "Warp Name is too long please use a shorter name");
+                        event.setCancelled(true);
+                        return;
+                    }
+                    log.log(Level.INFO, "{0} has set a new warp called: {1} at location: {2},{3},{4}",
+                            new Object[]{player.getName(), warpName, player.getLocation().getBlockX(),
+                        player.getLocation().getBlockY(), player.getLocation().getBlockZ()});
+                    economy.withdrawPlayer(player.getName(), config.getInt("NewWarpCost"));
+                    player.sendMessage(ChatColor.GREEN + "$" + config.getInt("NewWarpCost") + " has been taken off you.");
                 }
+            } else {
+                player.sendMessage(ChatColor.RED + "you need $" + config.getInt("NewWarpCost"));
+                event.setCancelled(true);
+                return;
             }
+
         }
 
 
